@@ -6,6 +6,33 @@
     <title>Poke</title>
   </head>
   <body>
-    <script></script>
+    <script>
+      //1. API에서 데이터 호출하기
+      async function getPokemon(id) {
+        console.log(`${id}번 포켓몬을 불러옵니다.`);
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const jsonData = await response.json();
+        console.log(jsonData);
+        //이름 (영어이름)
+        console.log(jsonData.name);
+        //앞모습
+        console.log(jsonData.sprites.front_default); //img
+        //울음소리
+        console.log(jsonData.cries.latest);
+
+        //한글 이름
+        const response2 = await fetch(
+          `https://pokeapi.co/api/v2/pokemon-species/${id}`
+        );
+        const jsonData2 = await response2.json();
+        console.log(jsonData2);
+        //console.log(jsonData2.names[2].name);
+        console.log(jsonData2.names.filter((v) => v.language.name === "ko"));
+        console.log(
+          jsonData2.names.filter((v) => v.language.name === "ko")[0].name
+        );
+      }
+      getPokemon(1);
+    </script>
   </body>
 </html>
