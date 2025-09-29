@@ -6,6 +6,11 @@
     <title>Poke</title>
   </head>
   <body>
+    <section>
+      포켓몬 ID : <input type="number" min="1" id="pokeId" />
+      <button id="pokeBtn">조회</button>
+    </section>
+    <section id="pokeBox"></section>
     <script>
       //1. API에서 데이터 호출하기
       async function getPokemon(id) {
@@ -31,8 +36,50 @@
         console.log(
           jsonData2.names.filter((v) => v.language.name === "ko")[0].name
         );
+
+        //3번 함수 호출
+        const koName = jsonData2.names.filter(
+          (v) => v.language.name === "ko"
+        )[0].name;
+        //변수를 바로 넣으면 해당 변수 이름이 key로 인식되어서 바로 들어가게 됨.
+
+        const poke = {
+          engName: jsonData.name,
+          koName,
+          shape: jsonData.sprites.front_default,
+          sound: jsonData.cries.latest,
+        };
+
+        localStorage.setItem("recent", JSON.stringify(poke)); //문자열화
+        //4번 호출
+        renderPoke(poke);
       }
-      getPokemon(1);
+      //getPokemon(1);
+
+      //2. input 통해 번호 바꿔보기
+      const pokeBtn = document.querySelector("#pokeBtn");
+      const pokeId = document.querySelector("#pokeId");
+
+      pokeBtn.addEventListener("click", () => getPokemon(pokeId.value));
+
+      //3. 데이터 화면에 그리기
+      function renderPoke({ engName, koName, shape, sound }) {
+        const pokeBox = document.querySelector("#pokeBox");
+        pokeBox.innerHTML = `
+            <h4>${koName}</h4>
+            <h5>${engName}</h5>
+            <img src="${shape}" />
+            <audio src="${sound}" controls></audio>
+        `;
+      }
+
+      //4. 직전 검색 데이터를 storage에 저장되어서 자동 로딩
+      document.addEventListener("DOMContentLoaded", () => {
+        const rawRecentPoke = localStorage.getItem("recent"); //문자열
+        if (!rawRecentPoke) return; //빈 문자열이나 undefined 있다면 무시하고 넘어가
+        const recentPoke = JSON.parse(rawRecentPoke);
+        renderPoke(recentPoke);
+      });
     </script>
   </body>
 </html>
