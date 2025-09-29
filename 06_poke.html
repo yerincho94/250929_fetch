@@ -27,19 +27,32 @@
         gap: 10px;
         margin-top: 10px;
       }
-      .history-item {
+      .history-item-container {
+        display: flex; /* 텍스트와 버튼을 한 줄에 배치 */
+        align-items: center;
         padding: 5px 10px;
-        border: 1px solid #3b4cca;
-        background-color: #f0f3ff;
-        color: #3b4cca;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background-color 0.2s;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #fff;
       }
-      .history-item:hover {
+
+      .history-text {
+        margin-right: 10px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .history-search-btn {
+        padding: 4px 8px;
+        border: none;
         background-color: #3b4cca;
         color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .history-search-btn:hover {
+        background-color: #2a3a9a;
       }
     </style>
   </head>
@@ -68,27 +81,31 @@
       }
 
       // 새로운 검색어를 히스토리에 추가/갱신하는 함수
-      function addHistory(id) {
+      function addHistory(newHistoryItem) {
+        // newHistoryItem = { query: '1', displayName: '이상해씨' } 형태
+
         // trim() 처리된 원본 쿼리를 저장
-        const trimmedQuery = String(id).trim().toLowerCase();
-        if (!trimmedQuery) return; // 빈 값은 저장 안함
+        //const trimmedQuery = String(id).trim().toLowerCase();
+        //if (!trimmedQuery) return; // 빈 값은 저장 안함
 
         let history = getHistory();
 
-        // 1. 중복 제거: 기존에 같은 항목이 있으면 먼저 제거
-        history = history.filter((item) => item !== trimmedQuery);
+        // 1. 중복 제거: 기존에 같은 query(검색어)를 가진 항목이 있으면 제거
+        const newHistory = history.filter(
+          (item) => item.query !== newHistoryItem.query
+        );
 
-        // 2. 맨 앞에 새 항목 추가 (가장 최근 항목이 맨 앞으로)
-        history.unshift(trimmedQuery);
+        // 2. 맨 앞에 새 항목 추가
+        newHistory.unshift(newHistoryItem);
 
         // 3. 최대 개수 유지
-        if (history.length > MAX_HISTORY_COUNT) {
-          history.pop();
+        if (newHistory.length > MAX_HISTORY_COUNT) {
+          newHistory.pop();
         }
 
         // 4. localStorage에 저장 및 UI 업데이트
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-        renderHistory(history);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+        renderHistory(newHistory);
       }
 
       // 히스토리 목록을 화면에 그리는 함수
@@ -102,13 +119,26 @@
           return;
         }
 
-        const historyListHtml = history
+        /* const historyListHtml = history
           .map(
             (item) => `
               <button class="history-item" data-query="${item}">
                   ${item}
               </button>
           `
+          )
+          .join(""); */
+
+        const historyListHtml = history
+          .map(
+            (item) => `
+            <div class="history-item-container">
+                <span class="history-text">${item.query} : ${item.displayName}</span>
+                <button class="history-search-btn" data-query="${item.query}">
+                    재검색
+                </button>
+            </div>
+            `
           )
           .join("");
 
@@ -118,7 +148,7 @@
           `;
 
         // 히스토리 항목 클릭 이벤트 추가
-        historyBox.querySelectorAll(".history-item").forEach((button) => {
+        historyBox.querySelectorAll(".history-search-btn").forEach((button) => {
           button.addEventListener("click", (e) => {
             const query = e.target.dataset.query;
             pokeId.value = query; // 입력 필드에 값 채우기
@@ -185,7 +215,8 @@
           };
 
           localStorage.setItem("recent", JSON.stringify(poke)); //문자열화
-          addHistory(query); // *** 히스토리 추가 ***
+          // 히스토리 추가 시: { query: '1', koName: '이상해씨' } 객체 형태로 저장
+          addHistory({ query: query, displayName: koName }); // *** 히스토리 추가 ***
 
           //4번 호출
           renderPoke(poke);
